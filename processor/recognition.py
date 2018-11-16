@@ -71,6 +71,25 @@ class REC_Processor(Processor):
 
     def show_topk(self, k):
         rank = self.result.argsort()
+
+        if k == 1:
+            accuracy_dict = {}
+            for i, l in enumerate(self.label):
+                try:
+                    accuracy_dict[l][1] += 1
+                except KeyError:
+                    accuracy_dict[l] = [0, 1]
+                if l == rank[i][-1]:
+                    accuracy_dict[l][0] += 1
+            key_list = list(accuracy_dict.keys())
+            key_list.sort()
+
+            self.io.print_log('\t*** Result by Label ***')
+            for l in key_list:
+                accuracy = accuracy_dict[l][0] * 1.0 / accuracy_dict[l][1]
+                self.io.print_log('\tIndex {}: {:.2f}%'.format(l, 100 * accuracy))
+            self.io.print_log('')
+
         hit_top_k = [l in rank[i, -k:] for i, l in enumerate(self.label)]
         accuracy = sum(hit_top_k) * 1.0 / len(hit_top_k)
         self.io.print_log('\tTop{}: {:.2f}%'.format(k, 100 * accuracy))
@@ -89,6 +108,7 @@ class REC_Processor(Processor):
 
             # forward
             output = self.model(data)
+
             loss = self.loss(output, label)
 
             # backward
