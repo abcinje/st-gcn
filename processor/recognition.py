@@ -74,6 +74,7 @@ class REC_Processor(Processor):
 
         if k == 1:
             accuracy_dict = {}
+            error_table = {} # injae
             for i, l in enumerate(self.label):
                 try:
                     accuracy_dict[l][1] += 1
@@ -81,6 +82,18 @@ class REC_Processor(Processor):
                     accuracy_dict[l] = [0, 1]
                 if l == rank[i][-1]:
                     accuracy_dict[l][0] += 1
+
+                # injae
+                try:
+                    labelGraph = error_table[l]
+                except KeyError:
+                    error_table[l] = {}
+
+                try:
+                    error_table[l][rank[i][-1]] += 1
+                except KeyError:
+                    error_table[l][rank[i][-1]] = 1
+
             key_list = list(accuracy_dict.keys())
             key_list.sort()
 
@@ -88,6 +101,16 @@ class REC_Processor(Processor):
             for l in key_list:
                 accuracy = accuracy_dict[l][0] * 1.0 / accuracy_dict[l][1]
                 self.io.print_log('\tIndex {}: {:.2f}%'.format(l, 100 * accuracy))
+            self.io.print_log('')
+
+            self.io.print_log('\t*** Error Table ***')
+            for l in key_list:
+                key_list_label = list(error_table[l].keys())
+                key_list_label.sort()
+                self.io.print_log('\tResult of Index {}:'.format(l))
+                for fake in key_list_label:
+                    self.io.print_log('\tIndex {}: {} time(s)'.format(fake, error_table[l][fake]))
+                self.io.print_log('')
             self.io.print_log('')
 
         hit_top_k = [l in rank[i, -k:] for i, l in enumerate(self.label)]
@@ -109,7 +132,15 @@ class REC_Processor(Processor):
             # forward
             output = self.model(data)
 
+            # injae
+            #print("***output***")
+            #print(output.shape)
+            #print("***label***")
+            #print(label.shape)
+
             loss = self.loss(output, label)
+            #print(data)
+            #print(loss)
 
             # backward
             self.optimizer.zero_grad()
