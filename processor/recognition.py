@@ -72,9 +72,10 @@ class REC_Processor(Processor):
     def show_topk(self, k):
         rank = self.result.argsort()
 
+        # Results for each label
         if k == 1:
             accuracy_dict = {}
-            error_table = {} # injae
+            error_table = {}
             for i, l in enumerate(self.label):
                 try:
                     accuracy_dict[l][1] += 1
@@ -83,7 +84,6 @@ class REC_Processor(Processor):
                 if l == rank[i][-1]:
                     accuracy_dict[l][0] += 1
 
-                # injae
                 try:
                     labelGraph = error_table[l]
                 except KeyError:
@@ -131,16 +131,7 @@ class REC_Processor(Processor):
 
             # forward
             output = self.model(data)
-
-            # injae
-            #print("***output***")
-            #print(output.shape)
-            #print("***label***")
-            #print(label.shape)
-
             loss = self.loss(output, label)
-            #print(data)
-            #print(loss)
 
             # backward
             self.optimizer.zero_grad()
